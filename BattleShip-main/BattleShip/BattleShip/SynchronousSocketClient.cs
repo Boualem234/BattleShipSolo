@@ -1,0 +1,144 @@
+﻿using BattleShip.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Net.Sockets;
+using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+
+namespace BattleShip
+{
+    public class SynchronousSocketClient
+    {
+        private static BattleShipModel BattleShip = new BattleShipModel();
+
+        private static Socket sender;
+
+        private static byte[] bytes = new byte[32];
+
+        public static void StartClient()
+        {
+            while (true)
+            {
+                BattleShip.NouveauJeux();
+                try
+                {
+                    //client connecte
+                    IPHostEntry ipHostInfo = Dns.GetHostEntry(DemandeIp());
+                    IPAddress ipAddress = ipHostInfo.AddressList.First(a => a.AddressFamily == AddressFamily.InterNetwork);
+                    IPEndPoint remoteEP = new IPEndPoint(ipAddress, 443);
+                    sender = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                    sender.Connect(remoteEP);
+
+
+                    do
+                    {
+                        //Client recoit parametres et send ok
+                        Jeux.Message("En attente des paramètres...");
+                        BattleShip.message = ReceiveMessage();
+                        BattleShip.AnalyseRequete();
+
+                        SendMessage(BattleShip.message);
+
+                        //Client recoit ok, place bateaux et send ok
+                        Jeux.Message("En attente du placement des bateaux de l'adversaire...");
+                        BattleShip.message = ReceiveMessage();
+                        if (!BattleShip.AnalyseRequete())
+                            Console.WriteLine("pas recu le ok donc pas cool");
+
+                        BattleShip.casesBateaux = Jeux.PlacerBateaux(BattleShipModel.tailleBateaux);
+
+                        BattleShip.message.SetMessage('O');
+                        SendMessage(BattleShip.message);
+
+                        //Executions des attaques jusqu'a la victoire ou la defaite
+                        Jeux.Message("En attente de l'attaque de l'adversaire...");
+                        while (true)
+                        {
+                            //Client analyse attaque et send resultat
+                            BattleShip.message = ReceiveMessage();
+                            if (!BattleShip.AnalyseRequete())
+                            {
+                                SendMessage(BattleShip.message);
+                                break;
+                            }
+
+                            SendMessage(BattleShip.message);
+
+                            //Client recoit ok et send attaque
+                            BattleShip.message = ReceiveMessage();
+                            if (!BattleShip.AnalyseRequete())
+                            {
+                                SendMessage(BattleShip.message);
+                                break;
+                            }
+
+                            BattleShip.message.SetMessageAttaque('A', Jeux.SelectCase(BattleShip.plateau));
+                            SendMessage(BattleShip.message);
+
+                            //Client recoit resultat et send ok
+                            BattleShip.message = ReceiveMessage();
+                            if (!BattleShip.AnalyseRequete())
+                            {
+                                SendMessage(BattleShip.message);
+                                break;
+                            }
+
+                            SendMessage(BattleShip.message);
+                        }
+                    } while (BattleShip.rejouer);
+                }
+                catch (ArgumentNullException ane)
+                {
+                    Console.WriteLine("ArgumentNullException : {0}", ane.ToString());
+                }
+                catch (SocketException se)
+                {
+                    Console.WriteLine("SocketException : {0}", se.ToString());
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Unexpected exception : {0}", e.ToString());
+                }
+            }
+        }
+
+        private static void SendMessage(Message message)
+        {
+            byte[] data = Encoding.ASCII.GetBytes(SerialisationModel.Serialiser(message));
+
+            int offset = 0;
+            while (offset < data.Length)
+            {
+                int chunkSize = Math.Min(32, data.Length - offset);
+                sender.Send(data, offset, chunkSize, SocketFlags.None);
+                offset += chunkSize;
+            }
+        }
+        
+        private static Message ReceiveMessage()
+        {
+            int bytesRec;
+            StringBuilder receivedDataBuilder = new StringBuilder();
+            do
+            {
+                bytesRec = sender.Receive(bytes);
+                receivedDataBuilder.Append(Encoding.ASCII.GetString(bytes, 0, bytesRec));
+            } while (bytesRec == 32);
+
+            string json = receivedDataBuilder.ToString();
+
+            return SerialisationModel.Deserialiser(json);
+        }
+
+        private static string DemandeIp()
+        {
+            Console.Clear();
+            Console.WriteLine("Quelle est l'IP de ton host? ");
+            return Console.ReadLine();
+        }
+    }
+}
