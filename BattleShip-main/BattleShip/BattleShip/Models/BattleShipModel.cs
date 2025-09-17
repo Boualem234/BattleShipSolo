@@ -122,19 +122,27 @@ namespace BattleShip.Models
             List<int> TailleBateaux = new List<int>();
 
             //Set la taille x du plateau
-            do
+            Console.Clear();
+            Console.Write("Taille du plateau sur le x: ");
+
+            while (!int.TryParse(Console.ReadLine(), out tailleX) || tailleX < 4 || tailleX > 12)
             {
                 Console.Clear();
+                Console.WriteLine("ERREUR : pas de valeur en dessous de 4 ou au dessus de 12");
                 Console.Write("Taille du plateau sur le x: ");
-            } while (!int.TryParse(Console.ReadLine(), out tailleX) || tailleX < 4 || tailleX >= 21);
+            }
 
 
             //Set la taille y du plateau
-            do
+            Console.Clear();
+            Console.Write("Taille du plateau sur le y: ");
+
+            while (!int.TryParse(Console.ReadLine(), out tailleY) || tailleY < 4 || tailleY > 12)
             {
                 Console.Clear();
+                Console.WriteLine("ERREUR : pas de valeur en dessous de 4 ou au dessus de 12");
                 Console.Write("Taille du plateau sur le y: ");
-            } while (!int.TryParse(Console.ReadLine(), out tailleY) || tailleY < 4 || tailleY >= 21);
+            }
 
             //Set la taille des bateaux
             tailleBateaux.Clear();
