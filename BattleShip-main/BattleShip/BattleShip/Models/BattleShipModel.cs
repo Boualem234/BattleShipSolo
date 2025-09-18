@@ -20,6 +20,8 @@ namespace BattleShip.Models
         public List<(int, int)> casesTouchees = new List<(int, int)>();
         public Message message = new Message();
         public bool rejouer = false;
+        public bool rejouerTour = false;
+
 
         /// <summary>
         /// Analyse la requete recu et effectue les actions necessaires
@@ -52,11 +54,13 @@ namespace BattleShip.Models
                             return true;
                         }
                         message.SetMessageAttaque('T', (message.coordonnes[0], message.coordonnes[1]));
+                        rejouerTour = true; // ← le joueur garde la main
                         return true;
                     }
                     else
                     {
                         message.SetMessageAttaque('M', (message.coordonnes[0], message.coordonnes[1]));
+                        rejouerTour = false; // ← main passe à l’adversaire
                         return true;
                     }
                 case 'T':

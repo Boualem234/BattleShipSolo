@@ -56,45 +56,78 @@ namespace BattleShip
 
                             //Executions des attaques jusqu'a la victoire ou la defaite
                             Jeux.Message("En attente du placement des bateaux de l'adversaire...");
+
+                            // Le serveur commence toujours
+                            bool tourDuServeur = true;
+
                             while (true)
                             {
-                                //Serveur recoit ok et send attaque
-                                BattleShip.message = ReceiveMessage();
-                                if (!BattleShip.AnalyseRequete())
+                                if (tourDuServeur)
                                 {
-                                    if (!BattleShip.rejouer)
+                                    // ===== TOUR DU SERVEUR =====
+                                    do
+                                    {
+                                        //Serveur recoit ok du client et send attaque
+                                        BattleShip.message = ReceiveMessage();
+                                        if (!BattleShip.AnalyseRequete())
+                                        {
+                                            if (!BattleShip.rejouer)
+                                                SendMessage(BattleShip.message);
+                                            goto EndGame; // Sortir de la boucle principale
+                                        }
+
+                                        BattleShip.message.SetMessageAttaque('A', Jeux.SelectCase(BattleShip.plateau));
                                         SendMessage(BattleShip.message);
-                                    break;
+
+                                        //Serveur recoit resultat du client et send ok
+                                        BattleShip.message = ReceiveMessage();
+                                        if (!BattleShip.AnalyseRequete())
+                                        {
+                                            if (!BattleShip.rejouer)
+                                                SendMessage(BattleShip.message);
+                                            goto EndGame; // Sortir de la boucle principale
+                                        }
+                                        SendMessage(BattleShip.message);
+
+                                        // Si le serveur a touché (rejouerTour = true), il garde la main
+                                        // Si le serveur a raté (rejouerTour = false), c'est au tour du client
+                                    } while (BattleShip.rejouerTour);
+
+                                    // Le serveur a raté, c'est maintenant au tour du client
+                                    tourDuServeur = false;
                                 }
-
-                                BattleShip.message.SetMessageAttaque('A', Jeux.SelectCase(BattleShip.plateau));
-                                SendMessage(BattleShip.message);
-
-                                //Serveur recoit resultat et send ok
-                                BattleShip.message = ReceiveMessage();
-                                if (!BattleShip.AnalyseRequete())
+                                else
                                 {
-                                    if (!BattleShip.rejouer)
+                                    // ===== TOUR DU CLIENT =====
+                                    do
+                                    {
+                                        //Serveur recoit attaque du client et send resultat
+                                        BattleShip.message = ReceiveMessage();
+                                        if (!BattleShip.AnalyseRequete())
+                                        {
+                                            if (!BattleShip.rejouer)
+                                                SendMessage(BattleShip.message);
+                                            goto EndGame; // Sortir de la boucle principale
+                                        }
                                         SendMessage(BattleShip.message);
-                                    break;
-                                }
-                                SendMessage(BattleShip.message);
 
-                                //Serveur recoit attaque et send resultat
-                                BattleShip.message = ReceiveMessage();
-                                if (!BattleShip.AnalyseRequete())
-                                {
-                                    if (!BattleShip.rejouer)
-                                        SendMessage(BattleShip.message);
-                                    break;
+                                        // Si le client a touché (rejouerTour = true), il garde la main
+                                        // Si le client a raté (rejouerTour = false), c'est au tour du serveur
+                                    } while (BattleShip.rejouerTour);
+
+                                    // Le client a raté, c'est maintenant au tour du serveur
+                                    tourDuServeur = true;
                                 }
-                                SendMessage(BattleShip.message);
                             }
+
+                        EndGame:
+                            // Gestion de la fin de partie et demande de rejouer
                             if (BattleShip.rejouer && BattleShip.message.statut != 'Y')
                             {
                                 SendMessage(BattleShip.message);
                                 BattleShip.message = ReceiveMessage();
                             }
+
                         } while (BattleShip.rejouer);
                     }
                     catch (Exception ex)
