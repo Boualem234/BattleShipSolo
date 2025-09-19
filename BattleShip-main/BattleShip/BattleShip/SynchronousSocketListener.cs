@@ -123,7 +123,7 @@ namespace BattleShip
 
         private static void SendMessage(Message message)
         {
-            byte[] data = Encoding.ASCII.GetBytes(SerialisationModel.Serialiser(message));
+            byte[] data = Encoding.ASCII.GetBytes(SerialisationModel.Serialiser(message) + "\n");
 
             int offset = 0;
             while (offset < data.Length)
@@ -134,19 +134,22 @@ namespace BattleShip
             }
         }
 
-
         private static Message ReceiveMessage()
         {
-            int bytesRec;
             StringBuilder receivedDataBuilder = new StringBuilder();
-            do
+            int bytesRec;
+
+            while (true)
             {
                 bytesRec = handler.Receive(bytes);
-                receivedDataBuilder.Append(Encoding.ASCII.GetString(bytes, 0, bytesRec));
-            } while (bytesRec == 32);
+                string chunk = Encoding.ASCII.GetString(bytes, 0, bytesRec);
+                receivedDataBuilder.Append(chunk);
 
-            string json = receivedDataBuilder.ToString();
+                if (chunk.Contains("\n"))
+                    break;
+            }
 
+            string json = receivedDataBuilder.ToString().TrimEnd('\n'); // Enlève le \n
             return SerialisationModel.Deserialiser(json);
         }
     }
