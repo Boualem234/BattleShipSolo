@@ -39,33 +39,31 @@ namespace BattleShip
                         {
                             bool gameEnded = false;
 
-                            // === PHASE 1 : Envoi des paramètres ===
+                            // Envoi des paramètres 
                             BattleShip.SetParametres();
                             BattleShip.NouveauJeux();
                             BattleShip.message.SetMessageParametres(BattleShipModel.plateauTailleX, BattleShipModel.plateauTailleY, BattleShipModel.tailleBateaux);
                             SendMessage(BattleShip.message);
 
-                            // === PHASE 2 : Réception de l'OK ===
+                            // Réception de l'OK 
                             BattleShip.message = ReceiveMessage();
                             if (!BattleShip.AnalyseRequete())
                                 break;
 
-                            // === PHASE 3 : Placement des bateaux ===
+                            // Placement des bateaux
                             BattleShip.casesBateaux = Jeux.PlacerBateaux(BattleShipModel.tailleBateaux);
                             BattleShip.message.SetMessage('O');
                             SendMessage(BattleShip.message);
 
                             Jeux.Message("En attente du placement des bateaux de l'adversaire...");
 
-                            // === PHASE 4 : Boucle de jeu ===
                             bool tourDuServeur = true;
 
                             while (!gameEnded)
                             {
                                 if (tourDuServeur)
                                 {
-                                    // === TOUR DU SERVEUR ===
-                                    do
+                                    // tour du serveur
                                     {
                                         BattleShip.message = ReceiveMessage();
                                         if (!BattleShip.AnalyseRequete())
@@ -96,7 +94,7 @@ namespace BattleShip
                                 }
                                 else
                                 {
-                                    // === TOUR DU CLIENT ===
+                                    // tour du client
                                     do
                                     {
                                         BattleShip.message = ReceiveMessage();
@@ -116,7 +114,7 @@ namespace BattleShip
                                 }
                             }
 
-                            // === FIN DE PARTIE ===
+                            // fin de partie
                             if (BattleShip.rejouer && BattleShip.message.statut != 'O')
                             {
                                 SendMessage(BattleShip.message);
