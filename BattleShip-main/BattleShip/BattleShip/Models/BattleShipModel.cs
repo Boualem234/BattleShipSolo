@@ -98,6 +98,10 @@ namespace BattleShip.Models
                 case 'S':
                     rejouer = false;
                     return false;
+                case 'Y':
+                    rejouer= true;
+                    return true;
+
                 default:
                     return false;
             }

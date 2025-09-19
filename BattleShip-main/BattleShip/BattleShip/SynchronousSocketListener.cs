@@ -2,19 +2,15 @@
 using System;
 using System.Net;
 using System.Net.Sockets;
-using System.Reflection;
 using System.Text;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace BattleShip
 {
     public class SynchronousSocketListener
     {
         private static BattleShipModel BattleShip = new BattleShipModel();
-
         private static Socket handler;
-
-        private static byte[] bytes = new byte[32];
+        private static readonly byte[] buffer = new byte[32];
 
         public static void StartListening()
         {
@@ -24,105 +20,104 @@ namespace BattleShip
 
             try
             {
-                //serveur attend
                 listener.Bind(localEndPoint);
                 listener.Listen(1);
+
+                Console.WriteLine("Serveur démarré sur le port 443.");
 
                 while (true)
                 {
                     Console.Clear();
-                    Console.WriteLine("Serveur en attente de connexions...");
+                    Console.WriteLine("En attente de connexions...");
+
                     handler = listener.Accept();
+                    Console.WriteLine("Client connecté.");
+
                     try
                     {
                         do
                         {
-                            //Serveur set parametres et send parametres
+                            bool gameEnded = false;
+
+                            // === PHASE 1 : Envoi des paramètres ===
                             BattleShip.SetParametres();
                             BattleShip.NouveauJeux();
                             BattleShip.message.SetMessageParametres(BattleShipModel.plateauTailleX, BattleShipModel.plateauTailleY, BattleShipModel.tailleBateaux);
-
                             SendMessage(BattleShip.message);
 
-                            //Serveur recoit ok, place bateaux et send ok
+                            // === PHASE 2 : Réception de l'OK ===
                             BattleShip.message = ReceiveMessage();
                             if (!BattleShip.AnalyseRequete())
                                 break;
 
+                            // === PHASE 3 : Placement des bateaux ===
                             BattleShip.casesBateaux = Jeux.PlacerBateaux(BattleShipModel.tailleBateaux);
-
                             BattleShip.message.SetMessage('O');
                             SendMessage(BattleShip.message);
 
-                            //Executions des attaques jusqu'a la victoire ou la defaite
                             Jeux.Message("En attente du placement des bateaux de l'adversaire...");
 
-                            // Le serveur commence toujours
+                            // === PHASE 4 : Boucle de jeu ===
                             bool tourDuServeur = true;
 
-                            while (true)
+                            while (!gameEnded)
                             {
                                 if (tourDuServeur)
                                 {
-                                    // ===== TOUR DU SERVEUR =====
+                                    // === TOUR DU SERVEUR ===
                                     do
                                     {
-                                        //Serveur recoit ok du client et send attaque
                                         BattleShip.message = ReceiveMessage();
                                         if (!BattleShip.AnalyseRequete())
                                         {
                                             if (!BattleShip.rejouer)
                                                 SendMessage(BattleShip.message);
-                                            goto EndGame; // Sortir de la boucle principale
+                                            gameEnded = true;
+                                            break;
                                         }
 
                                         BattleShip.message.SetMessageAttaque('A', Jeux.SelectCase(BattleShip.plateau));
                                         SendMessage(BattleShip.message);
 
-                                        //Serveur recoit resultat du client et send ok
                                         BattleShip.message = ReceiveMessage();
                                         if (!BattleShip.AnalyseRequete())
                                         {
                                             if (!BattleShip.rejouer)
                                                 SendMessage(BattleShip.message);
-                                            goto EndGame; // Sortir de la boucle principale
+                                            gameEnded = true;
+                                            break;
                                         }
+
                                         SendMessage(BattleShip.message);
 
-                                        // Si le serveur a touché (rejouerTour = true), il garde la main
-                                        // Si le serveur a raté (rejouerTour = false), c'est au tour du client
                                     } while (BattleShip.rejouerTour);
 
-                                    // Le serveur a raté, c'est maintenant au tour du client
                                     tourDuServeur = false;
                                 }
                                 else
                                 {
-                                    // ===== TOUR DU CLIENT =====
+                                    // === TOUR DU CLIENT ===
                                     do
                                     {
-                                        //Serveur recoit attaque du client et send resultat
                                         BattleShip.message = ReceiveMessage();
                                         if (!BattleShip.AnalyseRequete())
                                         {
                                             if (!BattleShip.rejouer)
                                                 SendMessage(BattleShip.message);
-                                            goto EndGame; // Sortir de la boucle principale
+                                            gameEnded = true;
+                                            break;
                                         }
+
                                         SendMessage(BattleShip.message);
 
-                                        // Si le client a touché (rejouerTour = true), il garde la main
-                                        // Si le client a raté (rejouerTour = false), c'est au tour du serveur
                                     } while (BattleShip.rejouerTour);
 
-                                    // Le client a raté, c'est maintenant au tour du serveur
                                     tourDuServeur = true;
                                 }
                             }
 
-                        EndGame:
-                            // Gestion de la fin de partie et demande de rejouer
-                            if (BattleShip.rejouer && BattleShip.message.statut != 'Y')
+                            // === FIN DE PARTIE ===
+                            if (BattleShip.rejouer && BattleShip.message.statut != 'O')
                             {
                                 SendMessage(BattleShip.message);
                                 BattleShip.message = ReceiveMessage();
@@ -132,33 +127,46 @@ namespace BattleShip
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"Erreur lors du traitement du client : {ex.Message}");
+                        Console.WriteLine($"[Erreur client] {ex.Message}");
                     }
                     finally
                     {
-                        // Fermer la connexion avec le client
-                        handler.Shutdown(SocketShutdown.Both);
-                        handler.Close();
-                        Console.WriteLine("Connexion fermée.");
+                        try
+                        {
+                            handler?.Shutdown(SocketShutdown.Both);
+                            handler?.Close();
+                            Console.WriteLine("Connexion client fermée proprement.");
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"[Fermeture socket] {ex.Message}");
+                        }
                     }
                 }
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Erreur critique : {e.Message}");
+                Console.WriteLine($"[Erreur serveur] {e.Message}");
             }
             finally
             {
-                listener.Close();
-                Console.WriteLine("Serveur arrêté.");
+                try
+                {
+                    listener?.Close();
+                    Console.WriteLine("Serveur arrêté.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[Fermeture listener] {ex.Message}");
+                }
             }
         }
 
         private static void SendMessage(Message message)
         {
             byte[] data = Encoding.ASCII.GetBytes(SerialisationModel.Serialiser(message));
-
             int offset = 0;
+
             while (offset < data.Length)
             {
                 int chunkSize = Math.Min(32, data.Length - offset);
@@ -167,19 +175,18 @@ namespace BattleShip
             }
         }
 
-
         private static Message ReceiveMessage()
         {
             int bytesRec;
             StringBuilder receivedDataBuilder = new StringBuilder();
+
             do
             {
-                bytesRec = handler.Receive(bytes);
-                receivedDataBuilder.Append(Encoding.ASCII.GetString(bytes, 0, bytesRec));
+                bytesRec = handler.Receive(buffer);
+                receivedDataBuilder.Append(Encoding.ASCII.GetString(buffer, 0, bytesRec));
             } while (bytesRec == 32);
 
             string json = receivedDataBuilder.ToString();
-
             return SerialisationModel.Deserialiser(json);
         }
     }
