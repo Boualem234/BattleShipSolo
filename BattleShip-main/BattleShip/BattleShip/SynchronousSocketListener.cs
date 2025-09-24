@@ -40,7 +40,12 @@ namespace BattleShip
                     if (msg.statut == 'C')
                     {
                         Console.WriteLine("A votre tour de choisir votre couleur :");
-                        Jeux.SetColor();
+                        Jeux.isClient = false;
+                        Jeux.LoadColor();
+
+                        Message couleurMessage = new Message();
+                        couleurMessage.SetMessageColor(Jeux.boatColor);
+                        SendMessage(couleurMessage);
                     }
 
                     try

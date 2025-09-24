@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using BattleShip.Models;
 using Microsoft.Win32.SafeHandles;
+using Newtonsoft.Json;
 
 namespace BattleShip
 {
@@ -20,6 +21,7 @@ namespace BattleShip
     public static class Jeux
     {
         public static Colors boatColor;
+        public static bool isClient;
 
         /// <summary>
         /// Recharge le plateau
@@ -340,7 +342,62 @@ namespace BattleShip
             }
         }
 
-        public static void SetColor()
+        public static void SaveColors(Colors colorClient, Colors colorServer)
+        {
+            string path = @"C:\Users\2534056\Documents\Color_BattleShip\colors.json";
+
+            var colorsObj = new
+            {
+                ColorClient = colorClient.ToString(),
+                ColorServer = colorServer.ToString()
+            };
+
+            string json = JsonConvert.SerializeObject(colorsObj, Formatting.Indented);
+
+            Directory.CreateDirectory(Path.GetDirectoryName(path));
+            File.WriteAllText(path, json);
+
+            Console.WriteLine($"✅ Couleurs sauvegardées dans : {path}");
+        }
+
+        public static void LoadColor()
+        {
+            string path = @"C:\Users\2534056\Documents\Color_BattleShip\colors.json";
+
+            if (File.Exists(path))
+            {
+                string json = File.ReadAllText(path);
+                var obj = JsonConvert.DeserializeObject<dynamic>(json);
+                string colorStr = null;
+                if (isClient)
+                {
+                    colorStr = obj.ColorClient;
+                }
+                else
+                {
+                    colorStr = obj.ColorServer;
+                }
+
+                if (Enum.TryParse(colorStr, out Colors color))
+                {
+                    Console.WriteLine($"✅ Couleur chargée depuis le fichier : {color}");
+                    boatColor = color;
+                }
+                else
+                {
+                    Console.WriteLine("❌ Couleur invalide dans le fichier, couleur par défaut utilisée (Vert).");
+                    boatColor = Colors.Green;
+                }
+            }
+            else
+            {
+                SetColor();
+            }
+        }
+
+
+
+        private static void SetColor()
         {
             Console.WriteLine("Quelle couleur pour vous ?");
             Console.WriteLine("1. Rouge");
@@ -370,7 +427,8 @@ namespace BattleShip
                     break;
             }
 
-             boatColor = color;
+            boatColor = color;
         }
+
     }
 }

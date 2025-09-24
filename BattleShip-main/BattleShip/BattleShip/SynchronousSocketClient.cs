@@ -30,12 +30,37 @@ namespace BattleShip
                 sender.Connect(remoteEP);
                 Console.WriteLine("Connexion établie avec le serveur.");
 
-                Jeux.SetColor();
+                Jeux.isClient = true;
+                Jeux.LoadColor();
 
                 // Envoyer la couleur choisie au serveur
                 Message couleurMessage = new Message();
                 couleurMessage.SetMessage('C'); // Statut 'C' = couleur
                 SendMessage(couleurMessage);
+
+                Message msg = ReceiveMessage();
+
+                if (msg.statut == 'C')
+                {
+                    if (msg.coordonnes.Count > 0)
+                    {
+                        int colorInt = msg.coordonnes[0];
+                        if (Enum.IsDefined(typeof(Colors), colorInt))
+                        {
+                            Colors couleur = (Colors)colorInt;
+                            Console.WriteLine($"Couleur reçue : {couleur}");
+                            Jeux.SaveColors(Jeux.boatColor, couleur);
+                        }
+                        else
+                        {
+                            Console.WriteLine("Couleur reçue invalide");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("Aucune donnée de couleur reçue");
+                    }
+                }
 
                 // Boucle des parties - GARDER LA MÊME CONNEXION
                 do

@@ -99,5 +99,10 @@ namespace BattleShip.Models
             coordonnes.Clear();
             this.statut = statut;
         }
+        public void SetMessageColor(Colors color)
+        {
+            statut = 'C';             // statut pour couleur
+            coordonnes.Add((int)color); // ajoute la couleur en int dans coordonnes
+        }
     }
 }
