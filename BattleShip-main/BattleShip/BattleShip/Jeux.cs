@@ -5,11 +5,22 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using BattleShip.Models;
+using Microsoft.Win32.SafeHandles;
 
 namespace BattleShip
 {
+
+    public enum Colors
+    {
+        Green,
+        Blue,
+        Red,
+        Yellow
+    }
     public static class Jeux
     {
+        public static Colors boatColor;
+
         /// <summary>
         /// Recharge le plateau
         /// </summary>
@@ -36,7 +47,7 @@ namespace BattleShip
         /// </summary>
         public static void Victoire()
         {
-            if (!Console.IsOutputRedirected) 
+            if (!Console.IsOutputRedirected)
             {
                 Console.Clear();
             }
@@ -314,7 +325,14 @@ namespace BattleShip
                 case 'M':
                     return "🌫️";
                 case 'B':
-                    return "🛥️";
+                    return boatColor switch
+                    {
+                        Colors.Red => "🟥",
+                        Colors.Blue => "🟦",
+                        Colors.Green => "🟩",
+                        Colors.Yellow => "🟨",
+                        _ => "⛵"
+                    };
                 case 'V':
                     return "✅";
                 default:
@@ -322,5 +340,37 @@ namespace BattleShip
             }
         }
 
+        public static void SetColor()
+        {
+            Console.WriteLine("Quelle couleur pour vous ?");
+            Console.WriteLine("1. Rouge");
+            Console.WriteLine("2. Bleu");
+            Console.WriteLine("3. Vert");
+            Console.WriteLine("4. Jaune");
+
+            Colors color;
+
+            switch (Console.ReadLine())
+            {
+                case "1":
+                    color = Colors.Red;
+                    break;
+                case "2":
+                    color = Colors.Blue;
+                    break;
+                case "3":
+                    color = Colors.Green;
+                    break;
+                case "4":
+                    color = Colors.Yellow;
+                    break;
+                default:
+                    Console.WriteLine("Choix invalide, couleur par défaut : Vert.");
+                    color = Colors.Green;
+                    break;
+            }
+
+             boatColor = color;
+        }
     }
 }

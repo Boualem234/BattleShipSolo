@@ -30,6 +30,13 @@ namespace BattleShip
                 sender.Connect(remoteEP);
                 Console.WriteLine("Connexion établie avec le serveur.");
 
+                Jeux.SetColor();
+
+                // Envoyer la couleur choisie au serveur
+                Message couleurMessage = new Message();
+                couleurMessage.SetMessage('C'); // Statut 'C' = couleur
+                SendMessage(couleurMessage);
+
                 // Boucle des parties - GARDER LA MÊME CONNEXION
                 do
                 {

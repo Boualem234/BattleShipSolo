@@ -19,7 +19,7 @@ namespace BattleShip.Models
                 return message;
             }
         }
-        //A=attaquer M=manquer T=toucher W=win P=parametre O=OK R=rejouer S=stop
+        //A=attaquer M=manquer T=toucher W=win P=parametre O=OK R=rejouer S=stop C=Color
         [JsonIgnore]
         public char statut;
         [JsonIgnore]

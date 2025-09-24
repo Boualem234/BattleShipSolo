@@ -150,7 +150,7 @@ namespace BattleShip.Models
 
             //Set la taille des bateaux
             tailleBateaux.Clear();
-            for(int l = 0; l <= Math.Min(tailleX,tailleY)/2; l++) 
+            for(int l = 0; l < 3; l++) 
             {
                 Console.Clear();
                 Console.Write($"Taille du bateau #{TailleBateaux.Count() + 1} (0 = stop): ");

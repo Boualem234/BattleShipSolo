@@ -33,6 +33,16 @@ namespace BattleShip
                     handler = listener.Accept();
                     Console.WriteLine("Client connecté.");
 
+
+                    Console.WriteLine("Le joueur choisi sa couleur...");
+
+                    Message msg = ReceiveMessage();
+                    if (msg.statut == 'C')
+                    {
+                        Console.WriteLine("A votre tour de choisir votre couleur :");
+                        Jeux.SetColor();
+                    }
+
                     try
                     {
                         do
