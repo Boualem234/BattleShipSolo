@@ -23,6 +23,7 @@ namespace BattleShip
             try
             {
                 // Connexion initiale
+
                 IPHostEntry ipHostInfo = Dns.GetHostEntry(DemandeIp());
                 IPAddress ipAddress = ipHostInfo.AddressList.First(a => a.AddressFamily == AddressFamily.InterNetwork);
                 IPEndPoint remoteEP = new IPEndPoint(ipAddress, 443);
@@ -243,8 +244,41 @@ namespace BattleShip
         private static string DemandeIp()
         {
             Console.Clear();
-            Console.WriteLine("Quelle est l'IP de ton host? ");
-            return Console.ReadLine();
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            while (true)
+            {
+                Console.WriteLine("Quelle est l'IP de ton host? ");
+                string input = Console.ReadLine();
+
+                if (string.IsNullOrWhiteSpace(input))
+                {
+                    Console.WriteLine("L'entrée ne peut pas être vide.");
+                    continue;
+                }
+
+                if (IPAddress.TryParse(input, out _))
+                {
+                    return input;
+                }
+
+                try
+                {
+                    Dns.GetHostEntry(input);
+                    return input;
+                }
+                catch (SocketException)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("Le nom d'hôte n'a pas pu être résolu.");
+                    Console.ForegroundColor= ConsoleColor.Cyan;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Erreur inattendue: {ex.Message}");
+                }
+            }
         }
+
+
     }
 }

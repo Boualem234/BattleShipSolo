@@ -33,7 +33,7 @@ namespace BattleShip
                     handler = listener.Accept();
                     Console.WriteLine("Client connecté.");
 
-
+                    Console.ForegroundColor = ConsoleColor.Yellow;
                     Console.WriteLine("Le joueur choisi sa couleur...");
 
                     Message msg = ReceiveMessage();
@@ -160,6 +160,16 @@ namespace BattleShip
             catch (Exception e)
             {
                 Console.WriteLine($"[Erreur serveur] {e.Message}");
+                Console.WriteLine("Est-ce que tu veux être le client (oui)? ");
+                switch (Console.ReadLine().ToLower())
+                {
+                    case "oui":
+                        SynchronousSocketClient.StartClient();
+                        break;
+                    default:
+                        SynchronousSocketListener.StartListening();
+                        break;
+                }
             }
             finally
             {
