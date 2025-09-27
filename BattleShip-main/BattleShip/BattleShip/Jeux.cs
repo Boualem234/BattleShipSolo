@@ -399,36 +399,47 @@ namespace BattleShip
 
         private static void SetColor()
         {
-            Console.WriteLine("Quelle couleur pour vous ?");
-            Console.WriteLine("1. Rouge");
-            Console.WriteLine("2. Bleu");
-            Console.WriteLine("3. Vert");
-            Console.WriteLine("4. Jaune");
-
             Colors color;
+            bool valid = false;
 
-            switch (Console.ReadLine())
+            while (!valid)
             {
-                case "1":
-                    color = Colors.Red;
-                    break;
-                case "2":
-                    color = Colors.Blue;
-                    break;
-                case "3":
-                    color = Colors.Green;
-                    break;
-                case "4":
-                    color = Colors.Yellow;
-                    break;
-                default:
-                    Console.WriteLine("Choix invalide, couleur par défaut : Vert.");
-                    color = Colors.Green;
-                    break;
-            }
+                Console.WriteLine("Quelle couleur pour vous ?");
+                Console.WriteLine("1. Rouge");
+                Console.WriteLine("2. Bleu");
+                Console.WriteLine("3. Vert");
+                Console.WriteLine("4. Jaune");
+                Console.WriteLine("Choisissez un chiffre entre 1 et 4 : ");
 
-            boatColor = color;
+                string? input = Console.ReadLine();
+
+                switch (input)
+                {
+                    case "1":
+                        color = Colors.Red;
+                        valid = true;
+                        break;
+                    case "2":
+                        color = Colors.Blue;
+                        valid = true;
+                        break;
+                    case "3":
+                        color = Colors.Green;
+                        valid = true;
+                        break;
+                    case "4":
+                        color = Colors.Yellow;
+                        valid = true;
+                        break;
+                    default:
+                        Console.WriteLine("Choix invalide. Veuillez réessayer.\n");
+                        continue; // On redemande
+                }
+
+                boatColor = color;
+            }
         }
+
 
     }
 }
