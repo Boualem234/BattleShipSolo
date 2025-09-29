@@ -344,7 +344,14 @@ namespace BattleShip
 
         public static void SaveColors(Colors colorClient, Colors colorServer)
         {
-            string path = @"C:\Users\2534056\Documents\Color_BattleShip\colors.json";
+            // dossier "Documents\Color_BattleShip" de l'utilisateur courant
+            string folderPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                "Color_BattleShip"
+            );
+
+            // chemin complet du fichier
+            string path = Path.Combine(folderPath, "colors.json");
 
             var colorsObj = new
             {
@@ -354,7 +361,7 @@ namespace BattleShip
 
             string json = JsonConvert.SerializeObject(colorsObj, Formatting.Indented);
 
-            Directory.CreateDirectory(Path.GetDirectoryName(path));
+            Directory.CreateDirectory(folderPath);
             File.WriteAllText(path, json);
 
             Console.WriteLine($"✅ Couleurs sauvegardées dans : {path}");
@@ -362,21 +369,17 @@ namespace BattleShip
 
         public static void LoadColor()
         {
-            string path = @"C:\Users\2534056\Documents\Color_BattleShip\colors.json";
+            string folderPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                "Color_BattleShip"
+            );
+            string path = Path.Combine(folderPath, "colors.json");
 
             if (File.Exists(path))
             {
                 string json = File.ReadAllText(path);
                 var obj = JsonConvert.DeserializeObject<dynamic>(json);
-                string colorStr = null;
-                if (isClient)
-                {
-                    colorStr = obj.ColorClient;
-                }
-                else
-                {
-                    colorStr = obj.ColorServer;
-                }
+                string colorStr = isClient ? (string)obj.ColorClient : (string)obj.ColorServer;
 
                 if (Enum.TryParse(colorStr, out Colors color))
                 {
@@ -394,8 +397,6 @@ namespace BattleShip
                 SetColor();
             }
         }
-
-
 
         private static void SetColor()
         {

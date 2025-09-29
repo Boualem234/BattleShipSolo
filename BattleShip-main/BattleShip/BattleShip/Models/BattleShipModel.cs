@@ -150,27 +150,58 @@ namespace BattleShip.Models
 
             //Set la taille des bateaux
             tailleBateaux.Clear();
-            for(int l = 0; l < 3; l++) 
+            for (int l = 0; l < 3; l++)
             {
                 Console.Clear();
                 Console.Write($"Taille du bateau #{TailleBateaux.Count() + 1} (0 = stop): ");
+
                 if (int.TryParse(Console.ReadLine(), out int taille))
                 {
                     if (taille != 0)
                     {
-                        if (taille > 1 && taille <= Math.Max(tailleX, tailleY))
+                        // Verif que la taille est > 1 et < taille max
+                        if (taille > 1 && taille < Math.Max(tailleX, tailleY))
+                        {
                             TailleBateaux.Add(taille);
+                            Console.WriteLine($"✅ Bateau de taille {taille} ajouté !");
+                            Thread.Sleep(800);
+                        }
+                        else
+                        {
+                            Console.WriteLine($"❌ Taille invalide ! Entrez une valeur entre 2 et {Math.Max(tailleX, tailleY) - 1}.");
+                            Thread.Sleep(1000);
+                            l--; 
+                        }
                     }
                     else
                     {
-                        if (TailleBateaux.Count() > 0) { break; }
+                        // si l'utilisateur tape 0
+                        if (TailleBateaux.Count() > 0)
+                        {
+                            Console.WriteLine("✅ Saisie des bateaux terminée.");
+                            Thread.Sleep(800);
+                            break;
+                        }
+                        else
+                        {
+                            Console.WriteLine("Vous devez ajouter au moins un bateau avant d'arrêter !");
+                            Thread.Sleep(1000);
+                            l--; // redemande sans compter cette tentative
+                        }
                     }
+                }
+                else
+                {
+                    Console.WriteLine("⚠️ Entrée invalide, entre un nombre !");
+                    Thread.Sleep(1000);
+                    l--; 
                 }
             }
 
-            //Set les settings
+            // Set les settings
             plateauTailleX = tailleX;
             plateauTailleY = tailleY;
+
             foreach (int taille in TailleBateaux)
             {
                 tailleBateaux.Add(taille);
